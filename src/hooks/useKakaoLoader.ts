@@ -1,86 +1,58 @@
-import { useEffect, useState } from 'react'
+/* Loads the Kakao Maps JS SDK exactly once for the whole app (build spec §6.1).
+   Uses autoload=false + kakao.maps.load(cb) as the SDK requires. The module-level
+   promise dedupes concurrent callers (e.g. three map cards mounting at once). */
+import { useEffect, useState } from "react";
 
-let scriptPromise: Promise<void> | null = null
+let loadPromise: Promise<void> | null = null;
 
-function loadKakaoScript(): Promise<void> {
-  if (scriptPromise) return scriptPromise
+function loadKakaoSdk(appkey: string): Promise<void> {
+  if (loadPromise) return loadPromise;
 
-  scriptPromise = new Promise<void>((resolve, reject) => {
-    // Already loaded
-    if (window.kakao && window.kakao.maps) {
-      resolve()
-      return
+  loadPromise = new Promise<void>((resolve, reject) => {
+    // Already present (e.g. HMR re-run)
+    if (window.kakao?.maps) {
+      resolve();
+      return;
+    }
+    const existing = document.getElementById("kakao-maps-sdk") as HTMLScriptElement | null;
+    const onReady = () => window.kakao.maps.load(() => resolve());
+
+    if (existing) {
+      existing.addEventListener("load", onReady);
+      existing.addEventListener("error", () => reject(new Error("Kakao SDK load failed")));
+      return;
     }
 
-    const appKey = import.meta.env.VITE_KAKAO_JS_KEY as string | undefined
-    if (!appKey) {
-      reject(new Error('VITE_KAKAO_JS_KEY is not set'))
-      return
-    }
+    const script = document.createElement("script");
+    script.id = "kakao-maps-sdk";
+    script.async = true;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appkey}&autoload=false&libraries=services`;
+    script.onload = onReady;
+    script.onerror = () => reject(new Error("Kakao SDK load failed"));
+    document.head.appendChild(script);
+  });
 
-    const script = document.createElement('script')
-    script.type = 'text/javascript'
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false`
-    script.async = true
-
-    script.onload = () => {
-      window.kakao.maps.load(() => {
-        resolve()
-      })
-    }
-    script.onerror = () => {
-      scriptPromise = null
-      reject(new Error('Kakao Maps SDK failed to load'))
-    }
-
-    document.head.appendChild(script)
-  })
-
-  return scriptPromise
+  return loadPromise;
 }
 
-export function useKakaoLoader(): boolean {
-  const [isLoaded, setIsLoaded] = useState(false)
+export function useKakaoLoader(): { loaded: boolean; error: boolean } {
+  const appkey = import.meta.env.VITE_KAKAO_JS_KEY;
+  const [loaded, setLoaded] = useState<boolean>(() => Boolean(window.kakao?.maps));
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    loadKakaoScript()
-      .then(() => setIsLoaded(true))
-      .catch((err) => console.error('[KakaoLoader]', err))
-  }, [])
-
-  return isLoaded
-}
-
-// Augment the global Window interface for TypeScript
-declare global {
-  interface Window {
-    kakao: {
-      maps: {
-        load: (callback: () => void) => void
-        Map: new (
-          container: HTMLElement,
-          options: { center: InstanceType<KakaoLatLng>; level: number },
-        ) => KakaoMapInstance
-        LatLng: KakaoLatLng
-        Marker: new (options: { position: InstanceType<KakaoLatLng> }) => KakaoMarkerInstance
-        CustomOverlay: new (options: {
-          position: InstanceType<KakaoLatLng>
-          content: string | HTMLElement
-          yAnchor?: number
-          xAnchor?: number
-        }) => KakaoOverlayInstance
-      }
+    if (!appkey) {
+      setError(true);
+      return;
     }
-  }
-}
+    let alive = true;
+    loadKakaoSdk(appkey)
+      .then(() => alive && setLoaded(true))
+      .catch(() => alive && setError(true));
+    return () => {
+      alive = false;
+    };
+  }, [appkey]);
 
-type KakaoLatLng = new (lat: number, lng: number) => { getLat: () => number; getLng: () => number }
-type KakaoMapInstance = {
-  setCenter: (latlng: InstanceType<KakaoLatLng>) => void
-}
-type KakaoMarkerInstance = {
-  setMap: (map: KakaoMapInstance | null) => void
-}
-type KakaoOverlayInstance = {
-  setMap: (map: KakaoMapInstance | null) => void
+  return { loaded, error };
 }

@@ -1,276 +1,208 @@
-import type { AccommodationResult } from '../types'
-import { theme } from '../theme'
-import KakaoMap from './KakaoMap'
-import ScoreBadge from './ScoreBadge'
-import EvaluationSection from './EvaluationSection'
+/* Step 3 — Accommodation result card + collapsible evaluation sections.
+   Ported from cards.jsx (AccommodationCard + AccordionSection). */
+import { useState } from "react";
+import type { AccommodationResult, EvaluationSection, SectionKind } from "../types";
+import { Icon } from "./Icon";
+import { KakaoMap } from "./KakaoMap";
+import { CategoryBar, RankCircle, ScoreCircle, StarRating } from "./primitives";
 
-interface AccommodationCardProps {
-  acc: AccommodationResult
-}
+const SECTION_META: Record<SectionKind, { title: string; color: string; bg: string }> = {
+  work: { title: "Work Environment", color: "var(--cat-work)", bg: "var(--cat-work-bg)" },
+  living: { title: "Living Elements", color: "var(--cat-living)", bg: "var(--cat-living-bg)" },
+  local: { title: "Local Experiences", color: "var(--cat-local)", bg: "var(--cat-local-bg)" },
+};
 
-const RANK_LABELS: Record<number, string> = { 1: '1위', 2: '2위', 3: '3위' }
-const RANK_COLORS: Record<number, string> = {
-  1: '#D97706',
-  2: '#6B7280',
-  3: '#92400E',
-}
-
-function CategoryScoreBar({
-  label,
-  score,
-  color,
-}: {
-  label: string
-  score: number
-  color: string
-}) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <span style={{ fontSize: 12, color: theme.neutral.secondary, width: 42, flexShrink: 0 }}>
-        {label}
-      </span>
-      <div
-        style={{
-          flex: 1,
-          height: 6,
-          borderRadius: 3,
-          backgroundColor: 'rgba(0,0,0,0.07)',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            width: `${Math.min(100, Math.max(0, score))}%`,
-            height: '100%',
-            backgroundColor: color,
-            borderRadius: 3,
-            transition: 'width 0.5s ease',
-          }}
-        />
-      </div>
-      <span style={{ fontSize: 12, fontWeight: 600, color, width: 28, textAlign: 'right', flexShrink: 0 }}>
-        {Math.round(score)}
-      </span>
-    </div>
-  )
-}
-
-export default function AccommodationCard({ acc }: AccommodationCardProps) {
-  const isFirst = acc.rank === 1
-  const rankColor = RANK_COLORS[acc.rank] ?? '#6B7280'
-
-  // stay point = accommodation itself
-  const stayPoint = {
-    name: acc.name,
-    category: 'stay' as const,
-    latitude: acc.map_points.find((p) => p.category === 'stay')?.latitude ?? 0,
-    longitude: acc.map_points.find((p) => p.category === 'stay')?.longitude ?? 0,
-  }
-
-  const mapCenter =
-    stayPoint.latitude !== 0
-      ? { lat: stayPoint.latitude, lng: stayPoint.longitude }
-      : { lat: 37.5665, lng: 126.978 }
-
+function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationSection }) {
+  const [open, setOpen] = useState(true);
+  const m = SECTION_META[kind];
   return (
     <div
       style={{
-        backgroundColor: theme.neutral.cardBg,
-        borderRadius: 12,
-        overflow: 'hidden',
-        border: isFirst ? `2px solid ${theme.brand.main}` : `1px solid ${theme.neutral.border}`,
-        boxShadow: isFirst
-          ? '0 4px 24px rgba(29,158,117,0.15)'
-          : '0 2px 12px rgba(0,0,0,0.06)',
-        display: 'flex',
-        flexDirection: 'column',
+        borderRadius: "var(--r-md)",
+        border: "1px solid var(--border-2)",
+        overflow: "hidden",
       }}
     >
-      {/* Header */}
-      <div
+      <button
+        onClick={() => setOpen((o) => !o)}
         style={{
-          padding: '18px 20px',
-          backgroundColor: isFirst ? theme.brand.bg : theme.neutral.pageBg,
-          borderBottom: `1px solid ${theme.neutral.border}`,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          padding: "12px 14px",
+          background: m.bg,
+          cursor: "pointer",
+          textAlign: "left",
         }}
       >
-        {/* Rank badge */}
-        <div
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+          <span
+            style={{ width: 9, height: 9, borderRadius: 999, background: m.color, flexShrink: 0 }}
+          />
+          <span
+            style={{ fontSize: 14.5, fontWeight: 800, color: m.color, whiteSpace: "nowrap" }}
+          >
+            {m.title}
+          </span>
+          <span
+            style={{
+              padding: "2px 9px",
+              borderRadius: 999,
+              border: `1px solid ${m.color}`,
+              color: m.color,
+              fontSize: 11.5,
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {data.score}점
+          </span>
+        </span>
+        <span
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            backgroundColor: rankColor,
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 13,
-            fontWeight: 800,
+            color: m.color,
+            transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+            transition: "transform .2s ease",
             flexShrink: 0,
           }}
         >
-          {RANK_LABELS[acc.rank] ?? `${acc.rank}위`}
+          <Icon name="chevron" size={18} stroke={2.4} />
+        </span>
+      </button>
+      {open && (
+        <div
+          className="fade-in"
+          style={{
+            padding: "14px 15px 16px",
+            background: "var(--surface)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 13,
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: "var(--ink-2)",
+              textWrap: "pretty",
+            }}
+          >
+            {data.summary}
+          </p>
+          <div style={{ height: 1, background: "var(--border-2)" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+            {data.items.map((it, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+                    {it.name}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 2 }}>
+                    {it.sub}
+                  </div>
+                </div>
+                <span style={{ marginTop: 1 }}>
+                  <StarRating value={it.rating} />
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
+      )}
+    </div>
+  );
+}
 
-        {/* Name & location */}
+export function AccommodationCard({ acc, index }: { acc: AccommodationResult; index: number }) {
+  const best = acc.rank === 1;
+  const cs = acc.category_scores;
+  return (
+    <div
+      className="fade-up"
+      style={{
+        animationDelay: `${index * 90}ms`,
+        display: "flex",
+        flexDirection: "column",
+        background: "var(--surface)",
+        borderRadius: "var(--r-lg)",
+        border: best ? "2px solid var(--teal-600)" : "1px solid var(--border)",
+        boxShadow: best ? "var(--shadow-lg)" : "var(--shadow-sm)",
+        overflow: "hidden",
+      }}
+    >
+      {/* header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 13,
+          padding: "16px 18px",
+          background: best ? "var(--teal-50)" : "var(--surface)",
+          borderBottom: "1px solid var(--border-2)",
+        }}
+      >
+        <RankCircle rank={acc.rank} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3
             style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: theme.neutral.primary,
-              marginBottom: 3,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              margin: 0,
+              fontSize: 17.5,
+              fontWeight: 800,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.25,
             }}
           >
             {acc.name}
           </h3>
-          {acc.location_text && (
-            <p
-              style={{
-                fontSize: 12,
-                color: theme.neutral.secondary,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {acc.location_text}
-            </p>
-          )}
+          <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 4, lineHeight: 1.4 }}>
+            {acc.address}
+          </div>
         </div>
-
-        {/* Score */}
-        <ScoreBadge score={acc.overall_score} size="lg" />
+        <ScoreCircle value={acc.overall_score} />
       </div>
 
-      <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* Kakao Map */}
-        <div style={{ borderRadius: 8, overflow: 'hidden' }}>
-          <KakaoMap center={mapCenter} points={acc.map_points} height={180} />
+      <div
+        style={{
+          padding: "16px 18px 20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
+        <KakaoMap
+          center={acc.center}
+          points={acc.map_points}
+          fallbackVariant={acc.map?.variant}
+          fallbackScale={acc.map?.scale}
+        />
+
+        {/* category scores */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-3)" }}>카테고리 점수</div>
+          <CategoryBar label="Work" value={cs.work} color="var(--cat-work)" />
+          <CategoryBar label="Living" value={cs.living} color="var(--cat-living)" />
+          <CategoryBar label="Local" value={cs.local} color="var(--cat-local)" />
         </div>
 
-        {/* Matched conditions */}
-        {acc.matched_conditions.length > 0 && (
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 600, color: theme.neutral.tertiary, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              매칭 조건
-            </p>
-            {acc.matched_conditions.slice(0, 3).map((cond, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 4 }}>
-                <span style={{ color: theme.brand.main, fontSize: 13, flexShrink: 0, marginTop: 1 }}>✓</span>
-                <span style={{ fontSize: 13, color: theme.brand.text, lineHeight: 1.5 }}>{cond}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Category score bars */}
-        <div>
-          <p style={{ fontSize: 11, fontWeight: 600, color: theme.neutral.tertiary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            카테고리 점수
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {acc.category_scores.work !== undefined && (
-              <CategoryScoreBar label="Work" score={acc.category_scores.work} color={theme.work.main} />
-            )}
-            {acc.category_scores.living !== undefined && (
-              <CategoryScoreBar label="Living" score={acc.category_scores.living} color={theme.living.main} />
-            )}
-            {acc.category_scores.local !== undefined && (
-              <CategoryScoreBar label="Local" score={acc.category_scores.local} color={theme.local.main} />
-            )}
-          </div>
+        {/* accordions */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+          <AccordionSection kind="work" data={acc.sections.work} />
+          <AccordionSection kind="living" data={acc.sections.living} />
+          <AccordionSection kind="local" data={acc.sections.local} />
         </div>
-
-        {/* Evaluation sections */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <EvaluationSection
-            title="Work Environment"
-            color={theme.work.text}
-            bgColor={theme.work.bg}
-            items={acc.work_environment}
-            summary={acc.work_summary}
-            score={acc.category_scores.work}
-          />
-          <EvaluationSection
-            title="Living Elements"
-            color={theme.living.text}
-            bgColor={theme.living.bg}
-            items={acc.living_elements}
-            summary={acc.living_summary}
-            score={acc.category_scores.living}
-          />
-          <EvaluationSection
-            title="Local Experiences"
-            color={theme.local.text}
-            bgColor={theme.local.bg}
-            items={acc.local_experiences}
-            summary={acc.local_summary}
-            score={acc.category_scores.local}
-          />
-        </div>
-
-        {/* Accommodation info */}
-        {acc.accommodation_info && (
-          <div
-            style={{
-              backgroundColor: theme.neutral.pageBg,
-              borderRadius: 8,
-              padding: '12px 14px',
-              fontSize: 13,
-              color: theme.neutral.secondary,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-            }}
-          >
-            {acc.accommodation_info.price && (
-              <div style={{ display: 'flex', gap: 6 }}>
-                <span>💰</span>
-                <span>{acc.accommodation_info.price}</span>
-              </div>
-            )}
-            {acc.accommodation_info.phone && (
-              <div style={{ display: 'flex', gap: 6 }}>
-                <span>📞</span>
-                <a href={`tel:${acc.accommodation_info.phone}`} style={{ color: theme.brand.main }}>
-                  {acc.accommodation_info.phone}
-                </a>
-              </div>
-            )}
-            {acc.accommodation_info.homepage && (
-              <div style={{ display: 'flex', gap: 6 }}>
-                <span>🌐</span>
-                <a
-                  href={acc.accommodation_info.homepage}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: theme.brand.main, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                >
-                  {acc.accommodation_info.homepage}
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Cons */}
-        {acc.cons && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-            <span style={{ color: theme.caution.main, flexShrink: 0 }}>⚠</span>
-            <span style={{ fontSize: 13, color: theme.caution.text, lineHeight: 1.5 }}>
-              {acc.cons}
-            </span>
-          </div>
-        )}
       </div>
     </div>
-  )
+  );
 }
