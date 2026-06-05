@@ -46,8 +46,8 @@ export interface MapPoint {
 
 export interface EvaluatedItem {
   name: string;
-  sub: string; // 짧은 설명 / 거리·이동시간 ("차 8분, 좌석 보통")
-  rating: number; // 0–5 (별점)
+  sub: string; // 짧은 설명
+  distance_text?: string; // 숙소 기준 이동거리/시간 ("도보 5분", "차 8분"). 없으면 생략
 }
 
 export interface EvaluationSection {
@@ -69,12 +69,18 @@ export interface AccommodationResult {
   address: string;
   /** 숙소(강조 핀) 좌표 = 지도 중심. */
   center: { lat: number; lng: number };
+  /** 검색 반경(m) — 세 에이전트 중 최대. 있으면 지도에 반경 원으로 표시. */
+  search_radius_m?: number;
   /** 작업/로컬/생활 장소들 — 색별 핀으로 표시. */
   map_points: MapPoint[];
   /** SDK 로드 실패 시 보여줄 플레이스홀더 설정 (폴백 전용). */
   map?: { variant: MapVariant; scale: string };
   category_scores: CategoryScores;
   sections: Record<SectionKind, EvaluationSection>;
+  /** 이 숙소가 충족하는 사용자 조건 (✓ 표시용). */
+  matched_conditions?: string[];
+  /** 숙소 기본정보 — 가격/연락처/홈페이지 (스펙 §5.3-8). 없는 항목은 생략(가격은 보통 미제공). */
+  accommodation_info?: { price?: string; phone?: string; homepage?: string };
 }
 
 /* ── API responses (view-model) ─────────────────────────────── */
@@ -87,5 +93,6 @@ export interface PlanResponse {
 export interface RecommendResponse {
   recommended_region: string; // "제주 구좌읍 세화리 생활권"
   results_subtitle: string;
+  matched_conditions?: string[]; // 사용자 조건 중 충족된 항목 (✓ 표시용)
   candidates: AccommodationResult[]; // rank 순
 }

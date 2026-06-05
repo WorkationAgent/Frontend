@@ -1,5 +1,4 @@
-/* App-wide top bar: brand · stepper · menu. Ported from screens.jsx (TopBar). */
-import { Icon } from "../Icon";
+/* App-wide top bar: brand · stepper. Ported from screens.jsx (TopBar). */
 import { Stepper } from "../primitives";
 
 export const MAXW = 1140;
@@ -46,21 +45,6 @@ export function TopBar({ step }: { step: number }) {
         <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
           <Stepper current={step} />
         </div>
-        <button
-          aria-label="더보기"
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 9,
-            color: "var(--ink-3)",
-            display: "grid",
-            placeItems: "center",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--border-2)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-        >
-          <Icon name="dots" size={18} stroke={2.4} />
-        </button>
       </div>
     </header>
   );

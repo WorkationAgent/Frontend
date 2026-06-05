@@ -1,7 +1,6 @@
 /* Design tokens + base styles, ported from the Claude Design handoff.
-   Seeded with the "오로라 (Aurora)" palette (blue → violet → teal) — the
-   user's chosen default. The full palette set lives in src/theme/palettes.ts
-   and can be applied at runtime via applyPalette(). */
+   Uses the "오로라 (Aurora)" palette (blue → violet → teal) — the user's
+   chosen default, applied directly to :root below. */
 :root {
   /* ── Surfaces / ink ── */
   --bg: #eef1f8;
@@ -39,12 +38,13 @@
   --warn: #e07a5f;
 
   /* ── Fixed category identity (constant across palettes) ── */
-  --cat-work: #dd6235;
-  --cat-work-bg: #fbede7;
-  --cat-living: #d14b86;
-  --cat-living-bg: #fbe9f1;
-  --cat-local: #d9982f;
-  --cat-local-bg: #fbf2de;
+  /* 카테고리 색 = 빨강(work) / 노랑(living) / 초록(local). 섹션·지도 핀 공용 */
+  --cat-work: #dc2626;
+  --cat-work-bg: #fdecec;
+  --cat-living: #ca8a04;
+  --cat-living-bg: #fbf1d3;
+  --cat-local: #16a34a;
+  --cat-local-bg: #e6f6ec;
   --rank-1: #e2922b;
   --rank-2: #6b7686;
   --rank-3: #9c6b3f;

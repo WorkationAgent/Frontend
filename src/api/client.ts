@@ -16,7 +16,7 @@
 import type { PlanResponse, RecommendResponse } from "../types";
 import { MOCK_PLAN_RESPONSE, MOCK_RECOMMEND_RESPONSE } from "../data/mock";
 
-const USE_MOCK = true; // ← set false once the backend endpoints are live
+const USE_MOCK = false; // ← set false once the backend endpoints are live
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));

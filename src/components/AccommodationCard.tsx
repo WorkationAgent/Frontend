@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { AccommodationResult, EvaluationSection, SectionKind } from "../types";
 import { Icon } from "./Icon";
 import { KakaoMap } from "./KakaoMap";
-import { CategoryBar, RankCircle, ScoreCircle, StarRating } from "./primitives";
+import { CategoryBar, RankCircle, ScoreCircle } from "./primitives";
 
 const SECTION_META: Record<SectionKind, { title: string; color: string; bg: string }> = {
   work: { title: "Work Environment", color: "var(--cat-work)", bg: "var(--cat-work-bg)" },
@@ -38,9 +38,9 @@ function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationS
         }}
       >
         <span style={{ display: "inline-flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-          <span
-            style={{ width: 9, height: 9, borderRadius: 999, background: m.color, flexShrink: 0 }}
-          />
+          <span style={{ color: m.color, display: "inline-flex", flexShrink: 0 }}>
+            <Icon name={kind} size={17} stroke={2} />
+          </span>
           <span
             style={{ fontSize: 14.5, fontWeight: 800, color: m.color, whiteSpace: "nowrap" }}
           >
@@ -113,9 +113,25 @@ function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationS
                     {it.sub}
                   </div>
                 </div>
-                <span style={{ marginTop: 1 }}>
-                  <StarRating value={it.rating} />
-                </span>
+                {it.distance_text && (
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      marginTop: 1,
+                      padding: "3px 9px",
+                      borderRadius: 999,
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--border-2)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--ink-2)",
+                      whiteSpace: "nowrap",
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {it.distance_text}
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -125,7 +141,15 @@ function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationS
   );
 }
 
-export function AccommodationCard({ acc, index }: { acc: AccommodationResult; index: number }) {
+export function AccommodationCard({
+  acc,
+  index,
+  matchedConditions,
+}: {
+  acc: AccommodationResult;
+  index: number;
+  matchedConditions?: string[];
+}) {
   const best = acc.rank === 1;
   const cs = acc.category_scores;
   return (
@@ -181,9 +205,39 @@ export function AccommodationCard({ acc, index }: { acc: AccommodationResult; in
           gap: 16,
         }}
       >
+        {/* 사용자 조건과 맞는 부분 (지도 위) */}
+        {matchedConditions && matchedConditions.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+            {matchedConditions.map((c, i) => (
+              <span
+                key={i}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "5px 10px",
+                  borderRadius: 999,
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border-2)",
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: "var(--ink-2)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span style={{ color: "var(--good)", display: "inline-flex", flexShrink: 0 }}>
+                  <Icon name="check" size={13} stroke={2.6} />
+                </span>
+                {c}
+              </span>
+            ))}
+          </div>
+        )}
+
         <KakaoMap
           center={acc.center}
           points={acc.map_points}
+          radiusM={acc.search_radius_m}
           fallbackVariant={acc.map?.variant}
           fallbackScale={acc.map?.scale}
         />
@@ -202,7 +256,89 @@ export function AccommodationCard({ acc, index }: { acc: AccommodationResult; in
           <AccordionSection kind="living" data={acc.sections.living} />
           <AccordionSection kind="local" data={acc.sections.local} />
         </div>
+
+        {/* 숙소 기본정보 (가격 · 연락처 · 홈페이지) */}
+        <AccommodationInfo info={acc.accommodation_info} />
       </div>
+    </div>
+  );
+}
+
+function AccommodationInfo({
+  info,
+}: {
+  info?: { price?: string; phone?: string; homepage?: string };
+}) {
+  if (!info || (!info.price && !info.phone && !info.homepage)) return null;
+  const href = info.homepage
+    ? info.homepage.startsWith("http")
+      ? info.homepage
+      : `https://${info.homepage}`
+    : undefined;
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 9,
+        padding: "13px 15px",
+        borderRadius: "var(--r-md)",
+        background: "var(--surface-2)",
+        border: "1px solid var(--border-2)",
+      }}
+    >
+      {info.price && <InfoRow icon="won" text={info.price} />}
+      {info.phone && <InfoRow icon="phone" text={info.phone} />}
+      {info.homepage && <InfoRow icon="link" text={info.homepage} href={href} />}
+    </div>
+  );
+}
+
+function InfoRow({
+  icon,
+  text,
+  href,
+}: {
+  icon: "won" | "phone" | "link";
+  text: string;
+  href?: string;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+      <span style={{ color: "var(--ink-3)", display: "inline-flex", flexShrink: 0 }}>
+        <Icon name={icon} size={15} stroke={1.9} />
+      </span>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--teal-700)",
+            textDecoration: "none",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {text}
+        </a>
+      ) : (
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "var(--ink-2)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {text}
+        </span>
+      )}
     </div>
   );
 }
