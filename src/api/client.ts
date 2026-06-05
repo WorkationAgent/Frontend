@@ -28,7 +28,15 @@ async function postJSON<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    throw new Error(`API ${path} failed: ${res.status} ${res.statusText}`);
+    // 백엔드 detail 메시지 파싱 시도
+    try {
+      const data = await res.json();
+      const detail = data?.detail;
+      if (typeof detail === "string") throw new Error(detail);
+    } catch (e) {
+      if (e instanceof Error && e.message !== "Unexpected end of JSON input") throw e;
+    }
+    throw new Error(`요청에 실패했습니다. (${res.status})`);
   }
   return (await res.json()) as T;
 }
