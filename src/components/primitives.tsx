@@ -1,4 +1,4 @@
-/* Primitives — chips, stepper, score badges, star ratings, category bars.
+/* Primitives — chips, stepper, score badges, category bars.
    Ported faithfully from primitives.jsx (inline-style design system). */
 import { Icon } from "./Icon";
 
@@ -222,59 +222,5 @@ export function CategoryBar({
         {value}
       </span>
     </div>
-  );
-}
-
-/* ── Star rating: gold filled + half + empty, plus numeric ── */
-export function StarRating({ value, size = 15 }: { value: number; size?: number }) {
-  const stars = [];
-  for (let i = 1; i <= 5; i++) {
-    const fill = value >= i ? 1 : value >= i - 0.5 ? 0.5 : 0;
-    stars.push(<Star key={i} fill={fill} size={size} />);
-  }
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        whiteSpace: "nowrap",
-        flexShrink: 0,
-      }}
-    >
-      <span style={{ display: "inline-flex", gap: 1 }}>{stars}</span>
-      <span
-        style={{
-          fontSize: 13,
-          fontWeight: 700,
-          color: "var(--ink-3)",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {value.toFixed(1)}
-      </span>
-    </span>
-  );
-}
-
-let starSeq = 0;
-function Star({ fill, size }: { fill: number; size: number }) {
-  const d = "M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9 6.8 19.2l1-5.8L3.6 9.3l5.8-.8z";
-  const gid = "sg" + (starSeq++).toString(36);
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      {fill === 0.5 && (
-        <defs>
-          <linearGradient id={gid}>
-            <stop offset="50%" stopColor="var(--star)" />
-            <stop offset="50%" stopColor="var(--star-off)" />
-          </linearGradient>
-        </defs>
-      )}
-      <path
-        d={d}
-        fill={fill === 1 ? "var(--star)" : fill === 0.5 ? `url(#${gid})` : "var(--star-off)"}
-      />
-    </svg>
   );
 }

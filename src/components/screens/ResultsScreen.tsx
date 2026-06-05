@@ -72,14 +72,19 @@ export function ResultsScreen({
             onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.28)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.18)")}
           >
-            <Icon name="spark" size={15} stroke={2} /> 다시 추천받기
+            <Icon name="spark" size={15} stroke={2} /> 처음으로 돌아가기
           </button>
         </div>
       </div>
       <div style={{ maxWidth: MAXW, margin: "0 auto", padding: "28px 24px 90px" }}>
         <div className="grid-cards" style={{ alignItems: "start" }}>
           {results.candidates.map((a, i) => (
-            <AccommodationCard key={a.rank} acc={a} index={i} />
+            <AccommodationCard
+              key={a.rank}
+              acc={a}
+              index={i}
+              matchedConditions={a.matched_conditions}
+            />
           ))}
         </div>
       </div>
