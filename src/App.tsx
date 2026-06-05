@@ -51,7 +51,14 @@ function reducer(state: State, action: Action): State {
     case "restart":
       return { phase: "input" };
     case "error":
-      return { ...state, error: action.message };
+      // 로딩 중 에러면 이전 화면으로 복귀 (무한 로딩 방지)
+      return {
+        ...state,
+        phase: state.phase === "loadingResults" ? "region"
+             : state.phase === "loadingRegion"  ? "input"
+             : state.phase,
+        error: action.message,
+      };
     default:
       return state;
   }
@@ -100,6 +107,21 @@ export default function App() {
     <div className="app-bg">
       <TopBar step={STEP_FOR_PHASE[state.phase]} />
       <main key={state.phase} className="fade-in">
+        {state.error && (
+          <div style={{
+            background: "#fee2e2", color: "#b91c1c", padding: "12px 20px",
+            borderRadius: 8, margin: "16px auto", maxWidth: 600,
+            fontSize: 14, textAlign: "center"
+          }}>
+            ⚠️ {state.error}
+            {(state.phase === "region" || state.phase === "input") && (
+              <span style={{ marginLeft: 8, cursor: "pointer", textDecoration: "underline" }}
+                onClick={() => dispatch({ type: "error", message: "" })}>
+                닫기
+              </span>
+            )}
+          </div>
+        )}
         {state.phase === "input" && <InputScreen onSubmit={handleSubmit} />}
         {state.phase === "loadingRegion" && <LoadingScreen variant="toRegion" />}
         {state.phase === "region" && state.plan && (
