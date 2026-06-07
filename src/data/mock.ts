@@ -88,6 +88,12 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
       center: { lat: 33.543, lng: 126.669 },
       search_radius_m: 1500,
       matched_conditions: ["바다 도보 5분", "조용한 환경", "반려견 동반 가능"],
+      living_categories: [
+        { category: "transport", label: "교통", name: "함덕환승정류장", distance_text: "도보 4분", found: true },
+        { category: "grocery", label: "식료품", name: "GS25 함덕라마다점", distance_text: "도보 2분", found: true },
+        { category: "medical", label: "의료", name: "함덕바른한의원", distance_text: "도보 6분", found: true },
+        { category: "services", label: "서비스", name: "농협 함덕지점", distance_text: "도보 5분", found: true },
+      ],
       map_points: [
         { name: "함덕 코워킹 카페", kind: "work", lat: 33.5418, lng: 126.6705 },
         { name: "GS25 함덕라마다점", kind: "living", lat: 33.5435, lng: 126.6698 },
@@ -102,6 +108,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
       sections: {
         work: {
           score: 60,
+          search_radius_m: 1500,
           summary:
             "반려견 동반이 가능한 조용한 숙소로, 바다 근처 산책 환경과 편안하게 머물 수 있는 작업 공간을 갖추고 있습니다.",
           items: [
@@ -111,6 +118,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
         },
         living: {
           score: 82,
+          search_radius_m: 2500,
           summary:
             "편의점과 재래시장 등 식료품점이 가까워 생활이 편리하며, 의료시설과 다양한 생활서비스가 근접해 있어 안심할 수 있습니다. 다만 버스 정류장은 다소 떨어져 있습니다.",
           items: [
@@ -122,6 +130,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
         },
         local: {
           score: 84,
+          search_radius_m: 2000,
           summary:
             "함덕해수욕장과 조천함덕해안도로 등 시그니처 명소가 도보 거리에 있어 자연과 바다를 가까이에서 매일 접할 수 있습니다.",
           items: [
@@ -143,6 +152,12 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
       center: { lat: 33.3245, lng: 126.843 },
       search_radius_m: 2500,
       matched_conditions: ["전용 작업공간 우수", "자연친화적 입지", "반려견 동반 가능"],
+      living_categories: [
+        { category: "transport", label: "교통", name: "표선환승정류장", distance_text: "차 7분", found: true },
+        { category: "grocery", label: "식료품", name: "CU 표선가마리점", distance_text: "도보 4분", found: true },
+        { category: "medical", label: "의료", name: "", distance_text: "", found: false },
+        { category: "services", label: "서비스", name: "표선우체국", distance_text: "차 6분", found: true },
+      ],
       map_points: [
         { name: "표선 감성 카페", kind: "work", lat: 33.326, lng: 126.841 },
         { name: "CU 표선가마리점", kind: "living", lat: 33.327, lng: 126.84 },
@@ -156,6 +171,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
       sections: {
         work: {
           score: 85,
+          search_radius_m: 1500,
           summary:
             "반려견 동반이 가능한 숙소로 업무 인프라가 충분하고, 바다 근처의 조용하고 편안한 작업 공간 환경을 제공합니다.",
           items: [
@@ -165,6 +181,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
         },
         living: {
           score: 65,
+          search_radius_m: 2500,
           summary:
             "편의점이 근처에 있으나 대중교통과 의료 시설은 부족하여 긴급 상황 시 불편할 수 있습니다. 조용하고 자연친화적 환경에서 휴식하기 적합합니다.",
           items: [
@@ -174,6 +191,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
         },
         local: {
           score: 86,
+          search_radius_m: 2000,
           summary:
             "표선해수욕장과 제주허브동산 등 자연 친화 명소가 인근에 있으며, 다양한 산책로와 분위기 좋은 카페가 있습니다.",
           items: [
@@ -196,6 +214,12 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
       center: { lat: 33.4715, lng: 126.306 },
       search_radius_m: 3000,
       matched_conditions: ["바다 근처", "한적한 동네", "조용한 휴식"],
+      living_categories: [
+        { category: "transport", label: "교통", name: "고내리정류장", distance_text: "도보 3분", found: true },
+        { category: "grocery", label: "식료품", name: "CU 제주고내리점", distance_text: "도보 3분", found: true },
+        { category: "medical", label: "의료", name: "애월보건지소", distance_text: "차 8분", found: true },
+        { category: "services", label: "서비스", name: "애월농협", distance_text: "차 7분", found: true },
+      ],
       map_points: [
         { name: "애월 카페거리", kind: "work", lat: 33.464, lng: 126.312 },
         { name: "CU 제주고내리점", kind: "living", lat: 33.471, lng: 126.3075 },
@@ -209,6 +233,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
       sections: {
         work: {
           score: 40,
+          search_radius_m: 1500,
           summary:
             "업무 인프라가 다소 부족하지만 조용하고 충실한 휴식 환경에 적합하며, 바다 근처에서 가볍게 작업하기 좋습니다.",
           items: [
@@ -218,6 +243,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
         },
         living: {
           score: 70,
+          search_radius_m: 2500,
           summary:
             "편의점과 생활 서비스가 근처에 있으나 교통 인프라 부재로 이동에 불편함이 예상되며 의료 시설도 거리가 있습니다.",
           items: [
@@ -228,6 +254,7 @@ export const MOCK_RECOMMEND_RESPONSE: RecommendResponse = {
         },
         local: {
           score: 80,
+          search_radius_m: 2000,
           summary:
             "애월읍 바닷가에 위치해 해안 포구와 한담해변 등 자연 경관 체험이 가능하고 조용한 휴식에 적합합니다.",
           items: [

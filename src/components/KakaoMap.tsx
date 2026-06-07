@@ -57,6 +57,7 @@ export function KakaoMap({
   center,
   points,
   radiusM,
+  stayName,
   height = 180,
   fallbackVariant = "a",
   fallbackScale = "250m",
@@ -65,6 +66,8 @@ export function KakaoMap({
   points: MapPoint[];
   /** 검색 반경(m). 있으면 숙소 중심에 반경 원을 그린다. */
   radiusM?: number;
+  /** 숙소 핀에 표시할 이름 (없으면 "숙소"). */
+  stayName?: string;
   height?: number;
   fallbackVariant?: MapVariant;
   fallbackScale?: string;
@@ -75,7 +78,12 @@ export function KakaoMap({
   useEffect(() => {
     if (!loaded || error || !ref.current || !window.kakao?.maps) return;
     const kakao = window.kakao;
-    const stay: MapPoint = { name: "숙소", kind: "stay", lat: center.lat, lng: center.lng };
+    const stay: MapPoint = {
+      name: stayName || "숙소",
+      kind: "stay",
+      lat: center.lat,
+      lng: center.lng,
+    };
     const all = [...points.filter((p) => p.kind !== "stay"), stay];
 
     const map = new kakao.maps.Map(ref.current, {
@@ -86,20 +94,54 @@ export function KakaoMap({
     map.setZoomable(true);
 
     const bounds = new kakao.maps.LatLngBounds();
-    const overlays: unknown[] = [];
+    const overlays: { setMap: (m: unknown) => void }[] = [];
+
+    // 핀 클릭 시 장소명을 띄우는 공용 라벨 오버레이
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const label: any = new kakao.maps.CustomOverlay({
+      yAnchor: 1.6,
+      xAnchor: 0.5,
+      zIndex: 100,
+      clickable: true, // 링크 클릭이 지도로 새지 않도록
+    });
+    const linkColor =
+      getComputedStyle(document.documentElement).getPropertyValue("--teal-600").trim() || "#3b6fe0";
+    const showLabel = (p: MapPoint, pos: unknown) => {
+      if (!p.name) return;
+      const url = `https://map.kakao.com/link/map/${encodeURIComponent(p.name)},${p.lat},${p.lng}`;
+      label.setContent(
+        `<div style="padding:9px 12px;border-radius:10px;background:#fff;border:1px solid #E0E4EF;` +
+          `box-shadow:0 3px 14px rgba(0,0,0,.22);font-family:Pretendard,sans-serif;white-space:nowrap;text-align:center;">` +
+          `<div style="font-size:12.5px;font-weight:800;color:#1E2433;letter-spacing:-0.02em;margin-bottom:5px;">${escapeHtml(p.name)}</div>` +
+          `<a href="${url}" target="_blank" rel="noreferrer" ` +
+          `style="font-size:11.5px;font-weight:700;color:${linkColor};text-decoration:none;">카카오맵에서 보기 →</a>` +
+          `</div>`,
+      );
+      label.setPosition(pos);
+      label.setMap(map);
+    };
+
     all.forEach((p) => {
       const pos = new kakao.maps.LatLng(p.lat, p.lng);
       bounds.extend(pos);
+      const el = document.createElement("div");
+      el.innerHTML = markerHtml(p);
+      el.style.cursor = "pointer";
+      el.addEventListener("click", () => showLabel(p, pos));
       const overlay = new kakao.maps.CustomOverlay({
         position: pos,
-        content: markerHtml(p),
+        content: el,
         yAnchor: p.kind === "stay" ? 1 : 0.5,
         xAnchor: 0.5,
         zIndex: p.kind === "stay" ? 10 : 1,
+        clickable: true, // 핀 클릭이 지도 클릭으로 새지 않도록 (팝업 즉시 닫힘 방지)
       });
       overlay.setMap(map);
       overlays.push(overlay);
     });
+
+    // 지도 빈 곳 클릭 → 라벨 닫기
+    kakao.maps.event.addListener(map, "click", () => label.setMap(null));
 
     // 검색 반경 원 — 숙소 중심. 팔레트의 --pin-stay 색을 따른다.
     // (kakao SDK는 untyped이므로 any로 둔다)
@@ -139,10 +181,11 @@ export function KakaoMap({
 
     return () => {
       window.clearTimeout(t);
-      overlays.forEach((o) => (o as { setMap: (m: unknown) => void }).setMap(null));
+      overlays.forEach((o) => o.setMap(null));
+      label.setMap(null);
       if (circle) circle.setMap(null);
     };
-  }, [loaded, error, center, points, radiusM]);
+  }, [loaded, error, center, points, radiusM, stayName]);
 
   if (error) {
     return <MapPlaceholder variant={fallbackVariant} scale={fallbackScale} height={height} />;

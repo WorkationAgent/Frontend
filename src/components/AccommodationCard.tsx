@@ -1,10 +1,18 @@
 /* Step 3 — Accommodation result card + collapsible evaluation sections.
    Ported from cards.jsx (AccommodationCard + AccordionSection). */
 import { useState } from "react";
-import type { AccommodationResult, EvaluationSection, SectionKind } from "../types";
+import type { AccommodationResult, EvaluationSection, LivingCategory, SectionKind } from "../types";
 import { Icon } from "./Icon";
 import { KakaoMap } from "./KakaoMap";
 import { CategoryBar, RankCircle, ScoreCircle } from "./primitives";
+
+/** 지도 검색 반경 원 — 고정값(m). 백엔드 search_radius_m 대신 사용. */
+const MAP_RADIUS_M = 2000;
+
+/** 반경(m) → 사람이 읽는 문구 ("2.0km" / "800m"). */
+function fmtRadius(m: number): string {
+  return m >= 1000 ? `${(m / 1000).toFixed(1)}km` : `${Math.round(m)}m`;
+}
 
 const SECTION_META: Record<SectionKind, { title: string; color: string; bg: string }> = {
   work: { title: "Work Environment", color: "var(--cat-work)", bg: "var(--cat-work-bg)" },
@@ -12,7 +20,15 @@ const SECTION_META: Record<SectionKind, { title: string; color: string; bg: stri
   local: { title: "Local Experiences", color: "var(--cat-local)", bg: "var(--cat-local-bg)" },
 };
 
-function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationSection }) {
+function AccordionSection({
+  kind,
+  data,
+  categories,
+}: {
+  kind: SectionKind;
+  data: EvaluationSection;
+  categories?: LivingCategory[];
+}) {
   const [open, setOpen] = useState(true);
   const m = SECTION_META[kind];
   return (
@@ -50,14 +66,14 @@ function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationS
             style={{
               padding: "2px 9px",
               borderRadius: 999,
-              border: `1px solid ${m.color}`,
-              color: m.color,
+              border: `1px solid ${data.skipped ? "var(--border)" : m.color}`,
+              color: data.skipped ? "var(--ink-3)" : m.color,
               fontSize: 11.5,
               fontWeight: 700,
               whiteSpace: "nowrap",
             }}
           >
-            {data.score}점
+            {data.skipped ? "평가 안 함" : `${data.score}점`}
           </span>
         </span>
         <span
@@ -71,7 +87,28 @@ function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationS
           <Icon name="chevron" size={18} stroke={2.4} />
         </span>
       </button>
-      {open && (
+      {open && data.skipped && (
+        <div
+          className="fade-in"
+          style={{
+            padding: "16px 15px",
+            background: "var(--surface)",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: "var(--ink-3)",
+            textWrap: "pretty",
+          }}
+        >
+          <span style={{ flexShrink: 0, marginTop: 1 }}>
+            <Icon name="warn" size={15} stroke={2} />
+          </span>
+          {data.skip_reason || "이 항목은 평가하지 않았어요."}
+        </div>
+      )}
+      {open && !data.skipped && (
         <div
           className="fade-in"
           style={{
@@ -93,7 +130,78 @@ function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationS
           >
             {data.summary}
           </p>
+          {typeof data.search_radius_m === "number" && data.search_radius_m > 0 && (
+            <span
+              style={{
+                alignSelf: "flex-start",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "3px 10px",
+                borderRadius: 999,
+                background: m.bg,
+                color: m.color,
+                fontSize: 11.5,
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+              }}
+            >
+              <Icon name="pin" size={12} stroke={2} />
+              검색 반경 약 {fmtRadius(data.search_radius_m)}
+            </span>
+          )}
           <div style={{ height: 1, background: "var(--border-2)" }} />
+          {categories && categories.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+              {categories.map((c, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: c.found ? "var(--ink)" : "var(--ink-3)",
+                      }}
+                    >
+                      {c.found ? c.name : "주변에 없음"}
+                    </div>
+                    <div
+                      style={{ fontSize: 12, fontWeight: 700, color: m.color, marginTop: 2 }}
+                    >
+                      {c.label}
+                    </div>
+                  </div>
+                  {c.distance_text && (
+                    <span
+                      style={{
+                        flexShrink: 0,
+                        marginTop: 1,
+                        padding: "3px 9px",
+                        borderRadius: 999,
+                        background: "var(--surface-2)",
+                        border: "1px solid var(--border-2)",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--ink-2)",
+                        whiteSpace: "nowrap",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {c.distance_text}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
             {data.items.map((it, i) => (
               <div
@@ -135,6 +243,7 @@ function AccordionSection({ kind, data }: { kind: SectionKind; data: EvaluationS
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
     </div>
@@ -237,7 +346,8 @@ export function AccommodationCard({
         <KakaoMap
           center={acc.center}
           points={acc.map_points}
-          radiusM={acc.search_radius_m}
+          radiusM={MAP_RADIUS_M}
+          stayName={acc.name}
           fallbackVariant={acc.map?.variant}
           fallbackScale={acc.map?.scale}
         />
@@ -245,15 +355,19 @@ export function AccommodationCard({
         {/* category scores */}
         <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ink-3)" }}>카테고리 점수</div>
-          <CategoryBar label="Work" value={cs.work} color="var(--cat-work)" />
-          <CategoryBar label="Living" value={cs.living} color="var(--cat-living)" />
-          <CategoryBar label="Local" value={cs.local} color="var(--cat-local)" />
+          <CategoryBar label="Work" value={cs.work} color="var(--cat-work)" skipped={acc.sections.work.skipped} />
+          <CategoryBar label="Living" value={cs.living} color="var(--cat-living)" skipped={acc.sections.living.skipped} />
+          <CategoryBar label="Local" value={cs.local} color="var(--cat-local)" skipped={acc.sections.local.skipped} />
         </div>
 
         {/* accordions */}
         <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
           <AccordionSection kind="work" data={acc.sections.work} />
-          <AccordionSection kind="living" data={acc.sections.living} />
+          <AccordionSection
+            kind="living"
+            data={acc.sections.living}
+            categories={acc.living_categories}
+          />
           <AccordionSection kind="local" data={acc.sections.local} />
         </div>
 
