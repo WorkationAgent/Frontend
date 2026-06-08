@@ -143,7 +143,7 @@ export function InputScreen({ onSubmit }: { onSubmit: (text: string) => void }) 
           color: "var(--ink-3)",
         }}
       >
-        예시를 그대로 두고 <b style={{ color: "var(--ink-2)" }}>추천받기</b>를 눌러도 데모가 진행돼요.
+        예시처럼 작성하고 <b style={{ color: "var(--ink-2)" }}>추천받기</b>를 눌러주세요.
       </p>
     </div>
   );
