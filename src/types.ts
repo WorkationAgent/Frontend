@@ -54,12 +54,24 @@ export interface EvaluationSection {
   score: number; // 0–100
   summary: string;
   items: EvaluatedItem[];
+  search_radius_m?: number; // 이 에이전트가 사용한 검색 반경(m)
+  skipped?: boolean; // 필요 없어서 미실행
+  skip_reason?: string; // 미실행 사유 안내 문구
 }
 
 export interface CategoryScores {
   work: number;
   living: number;
   local: number;
+}
+
+/* Living 생활 인프라 — 카테고리별 대표 장소 1곳 */
+export interface LivingCategory {
+  category: string; // transport / grocery / medical / services
+  label: string; // 교통 / 식료품 / 의료 / 서비스
+  name: string;
+  distance_text: string;
+  found: boolean;
 }
 
 export interface AccommodationResult {
@@ -77,6 +89,8 @@ export interface AccommodationResult {
   map?: { variant: MapVariant; scale: string };
   category_scores: CategoryScores;
   sections: Record<SectionKind, EvaluationSection>;
+  /** Living 카테고리별 대표 장소 (교통/식료품/의료/서비스). */
+  living_categories?: LivingCategory[];
   /** 이 숙소가 충족하는 사용자 조건 (✓ 표시용). */
   matched_conditions?: string[];
   /** 숙소 기본정보 — 가격/연락처/홈페이지 (스펙 §5.3-8). 없는 항목은 생략(가격은 보통 미제공). */
