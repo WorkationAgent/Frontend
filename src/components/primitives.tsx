@@ -177,10 +177,12 @@ export function CategoryBar({
   label,
   value,
   color,
+  skipped,
 }: {
   label: string;
   value: number;
   color: string;
+  skipped?: boolean;
 }) {
   return (
     <div
@@ -189,6 +191,7 @@ export function CategoryBar({
         gridTemplateColumns: "58px 1fr 30px",
         alignItems: "center",
         gap: 12,
+        opacity: skipped ? 0.55 : 1,
       }}
     >
       <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink-2)" }}>{label}</span>
@@ -204,7 +207,7 @@ export function CategoryBar({
           style={{
             display: "block",
             height: "100%",
-            width: `${value}%`,
+            width: skipped ? "0%" : `${value}%`,
             background: color,
             borderRadius: 999,
           }}
@@ -214,12 +217,12 @@ export function CategoryBar({
         style={{
           fontSize: 14.5,
           fontWeight: 800,
-          color,
+          color: skipped ? "var(--ink-3)" : color,
           textAlign: "right",
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        {value}
+        {skipped ? "—" : value}
       </span>
     </div>
   );
